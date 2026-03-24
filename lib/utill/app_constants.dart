@@ -5,7 +5,7 @@ import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
 class AppConstants {
   static const String appName = 'zabana store';
   static const String slogan = 'E-Commerce Marketplace';
-  static const String appVersion = '1.0.1'; ///Flutter SDK 3.32.8
+  static const String appVersion = '1.0'; ///Flutter SDK 3.32.8
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;
 
   static const String baseUrl = 'https://zabana.store';

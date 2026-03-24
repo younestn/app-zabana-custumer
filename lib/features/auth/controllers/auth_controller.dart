@@ -199,8 +199,6 @@ class AuthController with ChangeNotifier {
         await authServiceInterface.updateDeviceToken();
         Navigator.pushAndRemoveUntil(Get.context!, MaterialPageRoute(builder: (_) => const DashBoardScreen()), (route) => false);
       } else if (tempToken != null && tempToken.isNotEmpty) {
-        _isLoading = true;
-        notifyListeners();
         String type;
         if(config.customerVerification?.firebase == 1){
           type = 'phone';
@@ -428,7 +426,6 @@ class AuthController with ChangeNotifier {
       codeSent: (String vId, int? resendToken) async {
         _isPhoneNumberVerificationButtonLoading = false;
         _resendButtonLoading = false;
-        _isLoading = false;
         notifyListeners();
 
         bool callRoute = fromPage != FromPage.verification;
