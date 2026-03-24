@@ -1,0 +1,92 @@
+{
+  "project_info": {
+    "project_number": "696423528043",
+    "project_id": "zabana-c5e3f",
+    "storage_bucket": "zabana-c5e3f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696423528043:android:436dadfcbd5f214c2b632e",
+        "android_client_info": {
+          "package_name": "com.zabana.customer.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "696423528043-40dm13322074fegfpqcohlaod0dhvsh1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zabana.customer.app",
+            "certificate_hash": "96ee48750721f9dfc3cf4b077c35780212db2e72"
+          }
+        },
+        {
+          "client_id": "696423528043-ptlnuldb0ghls4s7pvj9a7r3g97usq8t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zabana.customer.app",
+            "certificate_hash": "9fb13852f4a3fe0581acb7aada39a3f10d8878bb"
+          }
+        },
+        {
+          "client_id": "696423528043-3d393dik4ubksvvedcb0tcggh4jaqpr9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAwmdM1hasjAkm0UwGC0EIzXSAhJsiutQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "696423528043-3d393dik4ubksvvedcb0tcggh4jaqpr9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696423528043:android:4c4457b9be9930fa2b632e",
+        "android_client_info": {
+          "package_name": "com.zabana.vendor.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "696423528043-ssgcpbnuhovccg3bsf1jbg938ma8n11v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zabana.vendor.app",
+            "certificate_hash": "3eaddeab5b2acb3247001540b9c314f5c6bbbf06"
+          }
+        },
+        {
+          "client_id": "696423528043-3d393dik4ubksvvedcb0tcggh4jaqpr9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAwmdM1hasjAkm0UwGC0EIzXSAhJsiutQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "696423528043-3d393dik4ubksvvedcb0tcggh4jaqpr9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
