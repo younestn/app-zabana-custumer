@@ -66,8 +66,11 @@ class CheckoutController with ChangeNotifier {
         String? couponCode, String? couponAmount,
         String? billingAddressId, String? orderNote, String? transactionId,
         String? paymentNote, int? id, String? name,bool isfOffline = false, bool wallet = false}) async {
-    for(TextEditingController textEditingController in inputFieldControllerList) {
-      inputValueList.add(textEditingController.text.trim());
+  inputValueList = [];
+inputValueList = [];
+for(TextEditingController textEditingController in inputFieldControllerList) {
+  inputValueList.add(textEditingController.text.trim());
+
 
     }
 
@@ -99,6 +102,7 @@ class CheckoutController with ChangeNotifier {
       _addressIndex = null;
       _billingAddressIndex = null;
       sameAsBilling = false;
+    
       if(!Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn()){
         _newUser = apiResponse.response!.data['new_user'];
       }
@@ -323,5 +327,7 @@ class CheckoutController with ChangeNotifier {
       notifyListeners();
     }
   }
+
+
 
 }

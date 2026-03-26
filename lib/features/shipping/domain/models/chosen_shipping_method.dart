@@ -6,15 +6,18 @@ class ChosenShippingMethodModel {
   String? _createdAt;
   String? _updatedAt;
   int? _isCheckItemExist;
+  Map<String, dynamic>? _extraData;
 
-  ChosenShippingMethodModel(
-      {int? id,
-        String? cartGroupId,
-        int? shippingMethodId,
-        double? shippingCost,
-        String? createdAt,
-        String? updatedAt,
-        int? isCheckItemExist}) {
+  ChosenShippingMethodModel({
+    int? id,
+    String? cartGroupId,
+    int? shippingMethodId,
+    double? shippingCost,
+    String? createdAt,
+    String? updatedAt,
+    int? isCheckItemExist,
+    Map<String, dynamic>? extraData,
+  }) {
     _id = id;
     _cartGroupId = cartGroupId;
     _shippingMethodId = shippingMethodId;
@@ -22,6 +25,7 @@ class ChosenShippingMethodModel {
     _createdAt = createdAt;
     _updatedAt = updatedAt;
     _isCheckItemExist = isCheckItemExist;
+    _extraData = extraData;
   }
 
   int? get id => _id;
@@ -31,26 +35,18 @@ class ChosenShippingMethodModel {
   String? get createdAt => _createdAt;
   String? get updatedAt => _updatedAt;
   int? get isCheckItemExist => _isCheckItemExist;
+  Map<String, dynamic>? get extraData => _extraData;
 
   ChosenShippingMethodModel.fromJson(Map<String, dynamic> json) {
     _id = json['id'];
     _cartGroupId = json['cart_group_id'];
-    _shippingMethodId = int.parse(json['shipping_method_id'].toString());
-    _shippingCost = double.parse(json['shipping_cost'].toString());
-    _createdAt = json['created_at'];
-    _updatedAt = json['updated_at'];
+    _shippingMethodId = int.tryParse(json['shipping_method_id'].toString());
+    _shippingCost = double.tryParse(json['shipping_cost'].toString());
+    _createdAt = json['created_at']?.toString();
+    _updatedAt = json['updated_at']?.toString();
     _isCheckItemExist = json['is_check_item_exist'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = _id;
-    data['cart_group_id'] = _cartGroupId;
-    data['shipping_method_id'] = _shippingMethodId;
-    data['shipping_cost'] = _shippingCost;
-    data['created_at'] = _createdAt;
-    data['updated_at'] = _updatedAt;
-    data['is_check_item_exist'] = _isCheckItemExist;
-    return data;
+    _extraData = json['extra_data'] is Map<String, dynamic>
+        ? json['extra_data']
+        : null;
   }
 }

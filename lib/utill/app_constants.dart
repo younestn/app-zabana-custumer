@@ -83,6 +83,12 @@ class AppConstants {
   static const String getShippingMethod = '/api/v1/shipping-method/by-seller';
   static const String chooseShippingMethod = '/api/v1/shipping-method/choose-for-order';
   static const String chosenShippingMethod = '/api/v1/shipping-method/chosen';
+  static const String noestWilayasUri = '/api/v1/noest/wilayas';
+static const String noestStationsUri = '/api/v1/noest/stations';
+static const String noestQuoteUri = '/api/v1/noest/quote';
+static const String getNoestWilayas = '/api/v1/shipping-method/noest/wilayas';
+static const String getNoestStations = '/api/v1/shipping-method/noest/stations';
+static const String getNoestPrice = '/api/v1/shipping-method/noest/price';
   static const String sendOtpToPhone = '/api/v1/auth/check-phone';
   static const String resendPhoneOtpUri = '/api/v1/auth/resend-otp-check-phone';
   static const String verifyPhoneUri = '/api/v1/auth/verify-phone';

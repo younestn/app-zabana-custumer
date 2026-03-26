@@ -80,4 +80,47 @@ class ShippingRepository implements ShippingRepositoryInterface{
     // TODO: implement get
     throw UnimplementedError();
   }
+
+  @override
+Future<ApiResponseModel> getNoestWilayas(int? sellerId, String? type) async {
+  try {
+    final response = await dioClient!.get('${AppConstants.getNoestWilayas}/$sellerId/$type');
+    return ApiResponseModel.withSuccess(response);
+  } catch (e) {
+    return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));
+  }
+}
+
+@override
+Future<ApiResponseModel> getNoestStations(int? sellerId, String? type, int? wilayaId) async {
+  try {
+    final response = await dioClient!.get('${AppConstants.getNoestStations}/$sellerId/$type/$wilayaId');
+    return ApiResponseModel.withSuccess(response);
+  } catch (e) {
+    return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));
+  }
+}
+
+@override
+Future<ApiResponseModel> getNoestPrice(Map<String, dynamic> body) async {
+  try {
+    body['guest_id'] = Provider.of<AuthController>(Get.context!, listen: false).getGuestToken();
+    final response = await dioClient!.post(AppConstants.getNoestPrice, data: body);
+    return ApiResponseModel.withSuccess(response);
+  } catch (e) {
+    return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));
+  }
+}
+
+@override
+Future<ApiResponseModel> addShippingMethodWithData(Map<String, dynamic> body) async {
+  try {
+    body['guest_id'] = Provider.of<AuthController>(Get.context!, listen: false).getGuestToken();
+    final response = await dioClient!.post(AppConstants.chooseShippingMethod, data: body);
+    return ApiResponseModel.withSuccess(response);
+  } catch (e) {
+    return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));
+  }
+}
+
 }

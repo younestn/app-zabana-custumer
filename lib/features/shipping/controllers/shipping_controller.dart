@@ -12,6 +12,9 @@ import 'package:flutter_sixvalley_ecommerce/helper/api_checker.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/domain/models/noest_wilaya_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/domain/models/noest_station_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/domain/models/noest_price_response_model.dart';
 
 class ShippingController extends ChangeNotifier {
   final ShippingServiceInterface shippingServiceInterface;
@@ -158,28 +161,77 @@ class ShippingController extends ChangeNotifier {
 
 
 
-  Future addShippingMethod(BuildContext context, int? id, String? cartGroupId) async {
-    _isLoading = true;
-    notifyListeners();
-    ApiResponseModel apiResponse = await shippingServiceInterface.addShippingMethod(id,cartGroupId);
-    if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      await Provider.of<CartController>(Get.context!, listen: false).getCartData(Get.context!);
-      if(context.mounted){
-        Navigator.pop(Get.context!);
-      }
-      getChosenShippingMethod(Get.context!);
-      showCustomSnackBar(getTranslated('shipping_method_added_successfully', Get.context!), Get.context!, isError: false);
+Future addShippingMethod({
+  required BuildContext context,
+  required ShippingMethodModel method,
+  required String groupId,
+  required int? sellerId,
+  required String? sellerType,
+}) async {
+  _isLoading = true;
+  notifyListeners();
 
-    } else {
-      if(context.mounted){
-        Navigator.pop(Get.context!);
-      }
-      ApiChecker.checkApi(apiResponse);
-    }
-    _isLoading = false;
-    notifyListeners();
+  Map<String, dynamic> body;
+
+  if ((method.isNoest ?? 0) == 1) {
+    body = {
+      'id': method.id,
+      'cart_group_id': groupId,
+      'seller_id': sellerId,
+      'seller_is': sellerType,
+      'shipping_company': method.companyName ?? method.title,
+      'delivery_type': _selectedDeliveryTypeMap[groupId] ?? method.deliveryType,
+      'wilaya_id': _selectedWilayaIdMap[groupId],
+      'wilaya_name': _selectedWilayaNameMap[groupId],
+      'station_code': _selectedStationCodeMap[groupId],
+      'station_name': _selectedStationNameMap[groupId],
+      'estimated_days': _estimatedDaysMap[groupId] ?? method.estimatedDays,
+      'shipping_cost': _pendingShippingCostMap[groupId] ?? method.cost ?? 0,
+      'is_noest': 1,
+    };
+  } else {
+    body = {
+      'id': method.id,
+      'cart_group_id': groupId,
+      'seller_id': sellerId,
+      'seller_is': sellerType,
+      'shipping_company': method.companyName ?? method.title,
+      'delivery_type': method.deliveryType ?? 'home_delivery',
+      'wilaya_id': null,
+      'wilaya_name': null,
+      'station_code': null,
+      'station_name': null,
+      'estimated_days': method.estimatedDays ?? method.duration,
+      'shipping_cost': method.cost ?? 0,
+      'is_noest': 0,
+    };
   }
 
+  final apiResponse = await shippingServiceInterface.addShippingMethodWithData(body);
+
+  if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+    await getChosenShippingMethod(Get.context!);
+    await Provider.of<CartController>(Get.context!, listen: false).getCartData(Get.context!);
+
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
+
+    showCustomSnackBar(
+      getTranslated('shipping_method_added_successfully', Get.context!),
+      Get.context!,
+      isError: false,
+    );
+  } else {
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
+    ApiChecker.checkApi(apiResponse);
+  }
+
+  _isLoading = false;
+  notifyListeners();
+}
 
 
   String? _selectedShippingType;
@@ -188,6 +240,171 @@ class ShippingController extends ChangeNotifier {
   final List<SelectedShippingType> _selectedShippingTypeList = [];
   List<SelectedShippingType> get selectedShippingTypeList => _selectedShippingTypeList;
 
+ChosenShippingMethodModel? getChosenShippingByGroupId(String? groupId) {
+  if(groupId == null) {
+    return null;
+  }
 
+  try {
+    return _chosenShippingList.firstWhere((item) => item.cartGroupId == groupId);
+  } catch (e) {
+    return null;
+  }
+}
+
+ShippingMethodModel? getSelectedMethodBySellerIndex(int sellerIndex) {
+  if(_shippingList == null || sellerIndex >= _shippingList!.length) {
+    return null;
+  }
+
+  final int? selectedIndex = _shippingList![sellerIndex].shippingIndex;
+  final List<ShippingMethodModel>? methodList = _shippingList![sellerIndex].shippingMethodList;
+
+  if(selectedIndex == null || selectedIndex < 0 || methodList == null || selectedIndex >= methodList.length) {
+    return null;
+  }
+
+  return methodList[selectedIndex];
+}
+
+double getTotalChosenShippingCost() {
+  double total = 0;
+  for(final ChosenShippingMethodModel item in _chosenShippingList) {
+    total += item.shippingCost ?? 0;
+  }
+  return total;
+}
+
+String getShippingMethodName(ShippingMethodModel? method) {
+  if(method == null) {
+    return '';
+  }
+
+  if((method.companyName?.isNotEmpty ?? false)) {
+    return method.companyName!;
+  }
+
+  if((method.providerName?.isNotEmpty ?? false)) {
+    return method.providerName!;
+  }
+
+  return method.title ?? '';
+}
+
+String getShippingMethodDuration(ShippingMethodModel? method) {
+  if(method == null) {
+    return '';
+  }
+
+  if((method.deliveryTypeLabel?.isNotEmpty ?? false)) {
+    return method.deliveryTypeLabel!;
+  }
+
+  if((method.estimatedDays?.isNotEmpty ?? false)) {
+    return method.estimatedDays!;
+  }
+
+  return method.duration ?? '';
+}
+
+final Map<String, List<NoestWilayaModel>> _noestWilayaMap = {};
+final Map<String, List<NoestStationModel>> _noestStationMap = {};
+final Map<String, int?> _selectedWilayaIdMap = {};
+final Map<String, String?> _selectedWilayaNameMap = {};
+final Map<String, String?> _selectedDeliveryTypeMap = {};
+final Map<String, String?> _selectedStationCodeMap = {};
+final Map<String, String?> _selectedStationNameMap = {};
+final Map<String, double> _pendingShippingCostMap = {};
+final Map<String, String?> _estimatedDaysMap = {};
+
+Map<String, List<NoestWilayaModel>> get noestWilayaMap => _noestWilayaMap;
+Map<String, List<NoestStationModel>> get noestStationMap => _noestStationMap;
+Map<String, double> get pendingShippingCostMap => _pendingShippingCostMap;
+
+
+
+void setSelectedDeliveryType(String groupId, String value) {
+  _selectedDeliveryTypeMap[groupId] = value;
+  notifyListeners();
+}
+
+void setSelectedWilaya(String groupId, int? wilayaId, String? wilayaName) {
+  _selectedWilayaIdMap[groupId] = wilayaId;
+  _selectedWilayaNameMap[groupId] = wilayaName;
+  _selectedStationCodeMap[groupId] = null;
+  _selectedStationNameMap[groupId] = null;
+  _pendingShippingCostMap[groupId] = 0;
+  notifyListeners();
+}
+
+void setSelectedStation(String groupId, String? stationCode, String? stationName) {
+  _selectedStationCodeMap[groupId] = stationCode;
+  _selectedStationNameMap[groupId] = stationName;
+  notifyListeners();
+}
+
+Future<void> loadNoestWilayas({
+  required BuildContext context,
+  required int? sellerId,
+  required String? sellerType,
+  required String groupId,
+}) async {
+  final apiResponse = await shippingServiceInterface.getNoestWilayas(sellerId, sellerType);
+  if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+    _noestWilayaMap[groupId] = [];
+    apiResponse.response!.data.forEach((item) {
+      _noestWilayaMap[groupId]!.add(NoestWilayaModel.fromJson(item));
+    });
+    notifyListeners();
+  } else {
+    ApiChecker.checkApi(apiResponse);
+  }
+}
+
+Future<void> loadNoestStations({
+  required BuildContext context,
+  required int? sellerId,
+  required String? sellerType,
+  required int wilayaId,
+  required String groupId,
+}) async {
+  final apiResponse = await shippingServiceInterface.getNoestStations(sellerId, sellerType, wilayaId);
+  if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+    _noestStationMap[groupId] = [];
+    apiResponse.response!.data.forEach((item) {
+      _noestStationMap[groupId]!.add(NoestStationModel.fromJson(item));
+    });
+    notifyListeners();
+  } else {
+    ApiChecker.checkApi(apiResponse);
+  }
+}
+
+Future<void> calculateNoestPrice({
+  required BuildContext context,
+  required int? sellerId,
+  required String? sellerType,
+  required String groupId,
+}) async {
+  final body = {
+    'seller_id': sellerId,
+    'seller_is': sellerType,
+    'cart_group_id': groupId,
+    'delivery_type': _selectedDeliveryTypeMap[groupId],
+    'wilaya_id': _selectedWilayaIdMap[groupId],
+    'station_code': _selectedStationCodeMap[groupId],
+  };
+
+  final apiResponse = await shippingServiceInterface.getNoestPrice(body);
+
+  if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+    final response = NoestPriceResponseModel.fromJson(apiResponse.response!.data);
+    _pendingShippingCostMap[groupId] = response.price ?? 0;
+    _estimatedDaysMap[groupId] = response.estimatedDays;
+    notifyListeners();
+  } else {
+    ApiChecker.checkApi(apiResponse);
+  }
+}
 
 }

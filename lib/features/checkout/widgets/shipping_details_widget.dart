@@ -11,16 +11,32 @@ import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
 import 'package:flutter_sixvalley_ecommerce/features/address/screens/saved_address_list_screen.dart';
 import 'package:flutter_sixvalley_ecommerce/features/address/screens/saved_billing_address_list_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/controllers/shipping_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/features/checkout/widgets/shipping_method_bottom_sheet_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
 
+import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/checkout/widgets/shipping_method_bottom_sheet_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/controllers/shipping_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
 
 class ShippingDetailsWidget extends StatefulWidget {
   final bool hasPhysical;
   final bool billingAddress;
   final GlobalKey<FormState> passwordFormKey;
+  final List<CartModel> cartList;
 
-  const ShippingDetailsWidget({super.key, required this.hasPhysical, required this.billingAddress, required this.passwordFormKey});
 
-  @override
+const ShippingDetailsWidget({
+  super.key,
+  required this.hasPhysical,
+  required this.billingAddress,
+  required this.passwordFormKey,
+  required this.cartList,
+});
+
+    @override
   State<ShippingDetailsWidget> createState() => _ShippingDetailsWidgetState();
 }
 
@@ -181,7 +197,134 @@ class _ShippingDetailsWidgetState extends State<ShippingDetailsWidget> {
                       ],
                       ),
                     )),
+                  if(widget.hasPhysical)
+  Consumer<ShippingController>(
+    builder: (context, shippingController, _) {
 
+      if (shippingController.isLoading &&
+          (shippingController.shippingList == null || shippingController.shippingList!.isEmpty)) {
+        return const Padding(
+          padding: EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      if (shippingController.shippingList == null || shippingController.shippingList!.isEmpty) {
+        return const SizedBox();
+      }
+
+      return Column(
+        children: List.generate(shippingController.shippingList!.length, (sellerIndex) {
+          final selectedMethod = shippingController.getSelectedMethodBySellerIndex(sellerIndex);
+          final chosenShipping = shippingController.getChosenShippingByGroupId(
+            shippingController.shippingList?[sellerIndex].groupId,
+          );
+
+          final double selectedShippingCost =
+              chosenShipping?.shippingCost ?? selectedMethod?.cost ?? 0;
+
+          final String selectedShippingName =
+              shippingController.getShippingMethodName(selectedMethod);
+
+          final String selectedShippingDuration =
+              shippingController.getShippingMethodDuration(selectedMethod);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
+            child: Card(
+              child: Container(
+                padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
+                  color: Theme.of(context).cardColor,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            (getTranslated('shipping_method', context) ?? 'Shipping Method') +
+                                (shippingController.shippingList!.length > 1 ? ' ${sellerIndex + 1}' : ''),
+                            style: textMedium.copyWith(
+                              fontSize: Dimensions.fontSizeLarge,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                        ),
+InkWell(
+  onTap: () => _openShippingMethodBottomSheet(
+    sellerIndex: sellerIndex,
+    sellerId: _groupedCartList[sellerIndex].first.sellerId ?? 0,
+    sellerType: _groupedCartList[sellerIndex].first.sellerIs ?? 'seller',
+    groupId: _groupedCartList[sellerIndex].first.cartGroupId ?? '',
+  ),
+  child: Text(
+    selectedMethod == null ? 'اختيار' : 'تغيير',
+    style: textMedium.copyWith(
+      color: Theme.of(context).primaryColor,
+    ),
+  ),
+),
+                      ],
+                    ),
+
+                    const SizedBox(height: Dimensions.paddingSizeSmall),
+
+                    if(selectedMethod != null) ...[
+                      Text(
+                        selectedShippingName,
+                        style: textRegular.copyWith(
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                      ),
+
+                      const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+
+                      Row(
+                        children: [
+                          Text(
+                            PriceConverter.convertPrice(context, selectedShippingCost),
+                            style: textRegular.copyWith(
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+
+                          if(selectedShippingDuration.isNotEmpty) ...[
+                            const SizedBox(width: Dimensions.paddingSizeSmall),
+                            Expanded(
+                              child: Text(
+                                selectedShippingDuration,
+                                style: textRegular.copyWith(
+                                  fontSize: Dimensions.fontSizeSmall,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ] else
+                      Text(
+                        getTranslated('select_shipping_method', context) ?? 'Select shipping method',
+                        style: textRegular.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      );
+    },
+  ),
                     isGuestMode ? (!widget.hasPhysical)?
                     CreateAccountWidget(formKey: widget.passwordFormKey) : const SizedBox() : const SizedBox(),
 
@@ -192,6 +335,54 @@ class _ShippingDetailsWidgetState extends State<ShippingDetailsWidget> {
         }
     );
   }
+
+  late List<List<CartModel>> _groupedCartList;
+
+@override
+void initState() {
+  super.initState();
+  _groupedCartList = _groupCartList(widget.cartList);
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if(widget.hasPhysical && _groupedCartList.isNotEmpty) {
+      Provider.of<ShippingController>(context, listen: false)
+          .getShippingMethod(context, _groupedCartList);
+    }
+  });
+}
+
+List<List<CartModel>> _groupCartList(List<CartModel> cartList) {
+  final Map<String, List<CartModel>> groupedMap = {};
+
+  for(final CartModel cart in cartList) {
+    final String key = cart.cartGroupId ?? '';
+    if(!groupedMap.containsKey(key)) {
+      groupedMap[key] = [];
+    }
+    groupedMap[key]!.add(cart);
+  }
+
+  return groupedMap.values.toList();
+}
+
+void _openShippingMethodBottomSheet({
+  required int sellerIndex,
+  required int sellerId,
+  required String sellerType,
+  required String groupId,
+}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ShippingMethodBottomSheetWidget(
+      sellerIndex: sellerIndex,
+      sellerId: sellerId,
+      sellerType: sellerType,
+      groupId: groupId,
+    ),
+  );
+}
 }
 
 class AddressInfoItem extends StatelessWidget {
