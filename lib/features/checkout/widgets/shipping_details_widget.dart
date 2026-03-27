@@ -11,13 +11,8 @@ import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
 import 'package:flutter_sixvalley_ecommerce/features/address/screens/saved_address_list_screen.dart';
 import 'package:flutter_sixvalley_ecommerce/features/address/screens/saved_billing_address_list_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/widgets/shipping_method_bottom_sheet_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
-import 'package:flutter_sixvalley_ecommerce/features/shipping/controllers/shipping_controller.dart';
-import 'package:flutter_sixvalley_ecommerce/features/checkout/widgets/shipping_method_bottom_sheet_widget.dart';
-import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
-
-import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
-import 'package:flutter_sixvalley_ecommerce/features/checkout/widgets/shipping_method_bottom_sheet_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/shipping/controllers/shipping_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
 
@@ -375,12 +370,14 @@ void _openShippingMethodBottomSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => ShippingMethodBottomSheetWidget(
-      sellerIndex: sellerIndex,
-      sellerId: sellerId,
-      sellerType: sellerType,
-      groupId: groupId,
-    ),
+  
+  builder: (_) => ShippingMethodBottomSheetWidget(
+  sellerIndex: sellerIndex,
+  sellerId: sellerId,
+  sellerType: sellerType,
+  groupId: groupId,
+),
+
   );
 }
 }

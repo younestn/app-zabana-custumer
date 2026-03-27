@@ -11,12 +11,14 @@ import 'package:provider/provider.dart';
 class ShippingMethodBottomSheetWidget extends StatefulWidget {
   final String? groupId;
   final int? sellerId;
+  final String sellerType;
   final int sellerIndex;
 
   const ShippingMethodBottomSheetWidget({
     super.key,
     required this.groupId,
     required this.sellerId,
+    required this.sellerType,
     required this.sellerIndex,
   });
 
@@ -238,13 +240,14 @@ class _ShippingMethodBottomSheetWidgetState
                                           final selectedMethod =
                                               methodList[selectedIndex];
 
-                                        await shippingController.addShippingMethod(
+                              await shippingController.addShippingMethod(
   context: context,
   method: selectedMethod,
   groupId: widget.groupId ?? '',
   sellerId: widget.sellerId,
-  sellerType: 'seller',
+  sellerType: widget.sellerType,
 );
+
                                         },
                                       ),
                                     ],

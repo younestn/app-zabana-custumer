@@ -497,8 +497,12 @@ class CartScreenState extends State<CartScreen> {
                                           child: InkWell(onTap: () {
                                             showModalBottomSheet(
                                               context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                                              builder: (context) => ShippingMethodBottomSheetWidget(groupId: sellerGroupList[index].cartGroupId,
-                                                  sellerIndex: index, sellerId: sellerGroupList[index].id),
+                                              builder: (context) => ShippingMethodBottomSheetWidget(
+  groupId: sellerGroupList[index].cartGroupId,
+  sellerIndex: index,
+  sellerId: sellerGroupList[index].sellerId,
+  sellerType: sellerGroupList[index].sellerIs ?? 'seller',
+),
                                             );
                                           },
                                             child: Container(decoration: BoxDecoration(
@@ -650,7 +654,12 @@ class CartScreenState extends State<CartScreen> {
                     ( !onlyDigital && configProvider.configModel!.shippingMethod != 'sellerwise_shipping' && configProvider.configModel!.inhouseSelectedShippingType =='order_wise')?
                     InkWell(onTap: () {showModalBottomSheet(
                           context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                          builder: (context) => const ShippingMethodBottomSheetWidget(groupId: 'all_cart_group',sellerIndex: 0, sellerId: 1));},
+                        builder: (context) => const ShippingMethodBottomSheetWidget(
+  groupId: 'all_cart_group',
+  sellerIndex: 0,
+  sellerId: 1,
+  sellerType: 'admin',
+));},
                       child: Padding(padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall, Dimensions.paddingSizeDefault, 0),
                         child: Container(decoration: BoxDecoration(
                           border: Border.all(width: 0.5, color: Colors.grey),
