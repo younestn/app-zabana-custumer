@@ -1,6 +1,20 @@
 import 'package:flutter_sixvalley_ecommerce/data/model/image_full_url.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/domain/models/product_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/shop/domain/models/seller_model.dart';
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
+
+double? _toDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString());
+} 
 class CartModel {
   int? id;
   int? productId;
@@ -90,73 +104,78 @@ class CartModel {
       );
 
 
-  CartModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    productId = int.parse(json['product_id'].toString());
-    name = json['name'];
-    seller = json['seller'];
-    thumbnail = json['thumbnail'];
-    sellerId = int.parse(json['seller_id'].toString());
-    sellerIs = json['seller_is'];
-    image = json['image'];
-    price = json['price'].toDouble();
-    discountedPrice = json['discounted_price'];
-    quantity = int.parse(json['quantity'].toString());
-    maxQuantity = json['max_quantity'];
-    variant = json['variant'];
-    color = json['color'];
-    variation = json['variation'] != null ? Variation.fromJson(json['variation']) : null;
-    discount = json['discount'].toDouble();
-    discountType = json['discount_type'];
-    tax = json['tax'].toDouble();
-    taxModel = json['tax_model'];
-    taxType = json['tax_type'];
-    shippingMethodId = json['shipping_method_id'];
-    cartGroupId = json['cart_group_id'];
-    shopInfo = json['shop_info'];
-    if (json['choice_options'] != null) {
-      choiceOptions = [];
-      json['choice_options'].forEach((v) {choiceOptions!.add(ChoiceOptions.fromJson(v));
-      });
-    }
-    variationIndexes = json['variation_indexes'] != null ? json['variation_indexes'].cast<int>() : [];
-    if(json['shipping_cost'] != null){
-      shippingCost =double.parse(json['shipping_cost'].toString());
-    }
-    if(json['shipping_type'] != null){
-      shippingType = json['shipping_type'];
-    }
-    productInfo = json['product'] != null ? ProductInfo.fromJson(json['product']) : null;
-    productType = json['product_type'];
-    slug = json['slug'];
-    if(json['minimum_order_amount_info'] != null){
-      try{
-        minimumOrderAmountInfo = json['minimum_order_amount_info'].toDouble();
-      }catch(e){
-        minimumOrderAmountInfo = double.parse(json['minimum_order_amount_info'].toString());
-      }
-    }
-    increment = false;
-    decrement = false;
-    freeDeliveryOrderAmount = json['free_delivery_order_amount'] != null ? FreeDeliveryOrderAmount.fromJson(json['free_delivery_order_amount']) : null;
-    shop = json['shop'] != null ? Shop.fromJson(json['shop'], isAdminProduct: json['seller_is'] == 'admin') : null;
-    if(json["is_product_available"] != null){
-      isProductAvailable = int.parse(json["is_product_available"].toString());
-    }else{
-      isProductAvailable = 1;
-    }
+CartModel.fromJson(Map<String, dynamic> json) {
+  id = _toInt(json['id']);
+  productId = _toInt(json['product_id']);
+  name = json['name'];
+  seller = json['seller'];
+  thumbnail = json['thumbnail'];
+  sellerId = _toInt(json['seller_id']);
+  sellerIs = json['seller_is'];
+  image = json['image'];
+  price = _toDouble(json['price']) ?? 0;
+  discountedPrice = _toDouble(json['discounted_price']);
+  quantity = _toInt(json['quantity']) ?? 0;
+  maxQuantity = _toInt(json['max_quantity']);
+  variant = json['variant'];
+  color = json['color'];
+  variation = json['variation'] != null ? Variation.fromJson(json['variation']) : null;
+  discount = _toDouble(json['discount']) ?? 0;
+  discountType = json['discount_type'];
+  tax = _toDouble(json['tax']) ?? 0;
+  taxModel = json['tax_model'];
+  taxType = json['tax_type'];
+  shippingMethodId = _toInt(json['shipping_method_id']);
+  cartGroupId = json['cart_group_id']?.toString();
+  shopInfo = json['shop_info'];
 
-    if(json['is_checked'] != null) {
-      isChecked = json['is_checked'] == 1 ? true : false;
-    } else {
-      isChecked = false;
-    }
-    thumbnailFullUrl = json['thumbnail_full_url'] != null
-        ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
-        : null;
-    isGroupChecked = false;
-    isGroupItemChecked = false;
+  if (json['choice_options'] != null) {
+    choiceOptions = [];
+    json['choice_options'].forEach((v) {
+      choiceOptions!.add(ChoiceOptions.fromJson(v));
+    });
   }
+
+  variationIndexes = json['variation_indexes'] != null ? json['variation_indexes'].cast<int>() : [];
+
+  shippingCost = _toDouble(json['shipping_cost']);
+  if (json['shipping_type'] != null) {
+    shippingType = json['shipping_type'];
+  }
+
+  productInfo = json['product'] != null ? ProductInfo.fromJson(json['product']) : null;
+  productType = json['product_type'];
+  slug = json['slug'];
+  minimumOrderAmountInfo = _toDouble(json['minimum_order_amount_info']);
+
+  increment = false;
+  decrement = false;
+
+  freeDeliveryOrderAmount = json['free_delivery_order_amount'] != null
+      ? FreeDeliveryOrderAmount.fromJson(json['free_delivery_order_amount'])
+      : null;
+
+  shop = json['shop'] != null ? Shop.fromJson(json['shop'], isAdminProduct: json['seller_is'] == 'admin') : null;
+
+  if (json["is_product_available"] != null) {
+    isProductAvailable = _toInt(json["is_product_available"]) ?? 1;
+  } else {
+    isProductAvailable = 1;
+  }
+
+  if (json['is_checked'] != null) {
+    isChecked = json['is_checked'] == 1 ? true : false;
+  } else {
+    isChecked = false;
+  }
+
+  thumbnailFullUrl = json['thumbnail_full_url'] != null
+      ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
+      : null;
+
+  isGroupChecked = false;
+  isGroupItemChecked = false;
+}
 
 
 }
@@ -168,19 +187,13 @@ class ProductInfo {
 
   ProductInfo({ this.minimumOrderQty, this.totalCurrentStock});
 
-  ProductInfo.fromJson(Map<String, dynamic> json) {
-    if(json['minimum_order_qty'] != null) {
-      try{
-        minimumOrderQty = json['minimum_order_qty'];
-      }catch(e){
-        minimumOrderQty = int.parse(json['minimum_order_qty'].toString());
-      }
-    }
-    totalCurrentStock = json['total_current_stock'];
-    thumbnailFullUrl = json['thumbnail_full_url'] != null
-        ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
-        : null;
-  }
+ProductInfo.fromJson(Map<String, dynamic> json) {
+  minimumOrderQty = _toInt(json['minimum_order_qty']);
+  totalCurrentStock = _toInt(json['total_current_stock']);
+  thumbnailFullUrl = json['thumbnail_full_url'] != null
+      ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
+      : null;
+}
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -197,33 +210,33 @@ class FreeDeliveryOrderAmount {
   double? shippingCostSaved;
   double? amountNeed;
 
+  FreeDeliveryOrderAmount({
+    this.status,
+    this.amount,
+    this.percentage,
+    this.shippingCostSaved,
+    this.amountNeed,
+  });
 
-  FreeDeliveryOrderAmount(
-      {this.status,
-        this.amount,
-        this.percentage,
-        this.shippingCostSaved,
-        this.amountNeed,
-        });
-
-  FreeDeliveryOrderAmount.fromJson(Map<String, dynamic> json) {
-    status = int.parse(json['status'].toString());
-    if(json['amount'] != null){
-      amount = json['amount'].toDouble();
-    }
-
-    if(json['percentage'] != null){
-      percentage = int.parse(json['percentage'].toString());
-    }
-
-    if(json['shipping_cost_saved'] != null){
-      shippingCostSaved = json['shipping_cost_saved'].toDouble();
-    }
-
-    if(json['amount_need'] != null){
-      amountNeed = json['amount_need'].toDouble();
-    }
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
+
+  int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+FreeDeliveryOrderAmount.fromJson(Map<String, dynamic> json) {
+  status = _toInt(json['status']);
+  amount = _toDouble(json['amount']);
+  percentage = _toInt(json['percentage']);
+  shippingCostSaved = _toDouble(json['shipping_cost_saved']);
+  amountNeed = _toDouble(json['amount_need']);
+}
 }
 
 

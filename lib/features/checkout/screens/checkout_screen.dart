@@ -383,4 +383,3 @@ child: ShippingDetailsWidget(
     }
   }
 }
-

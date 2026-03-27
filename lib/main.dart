@@ -85,9 +85,10 @@ Future<void> main() async {
     }
   }
   await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
-  await di.init();
 
-  flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
+await di.init();
+
+flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
 
   NotificationBody? body;
   try {

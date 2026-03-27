@@ -167,17 +167,20 @@ class CartScreenState extends State<CartScreen> {
                   }
                 }
               }
-              for(int i=0; i<shippingController.chosenShippingList.length; i++){
-                if(shippingController.chosenShippingList[i].isCheckItemExist == 1 && !onlyDigital) {
-                  shippingAmount += shippingController.chosenShippingList[i].shippingCost!;
-                }
-              }
+            for (int i = 0; i < shippingController.chosenShippingList.length; i++) {
+  if (shippingController.chosenShippingList[i].isCheckItemExist == 1 && !onlyDigital) {
+    shippingAmount += shippingController.chosenShippingList[i].shippingCost ?? 0;
+  }
+}
 
-              for(int j = 0; j< cartList.length; j++){
-                if(cartList[j].isChecked!) {
-                  shippingAmount += cart.cartList[j].shippingCost ?? 0;
-                }
-              }
+// عند وجود chosen shipping نستخدمه كمرجع رئيسي للتكلفة الديناميكية
+if (shippingController.chosenShippingList.isEmpty) {
+  for (int j = 0; j < cartList.length; j++) {
+    if (cartList[j].isChecked!) {
+      shippingAmount += cart.cartList[j].shippingCost ?? 0;
+    }
+  }
+}
 
               final requiredMinOrderQtyCart = _getRequiredMinOrderQtyCartModel(sellerGroupList, cartProductList);
 
@@ -563,8 +566,11 @@ class CartScreenState extends State<CartScreen> {
                                               shippingController.shippingList![index].shippingMethodList == null ||
                                               shippingController.chosenShippingList.isEmpty ||
                                               shippingController.shippingList![index].shippingIndex == -1) ? ''
-                                              : PriceConverter.convertPrice(context,
-                                              shippingController.shippingList![index].shippingMethodList![shippingController.shippingList![index].shippingIndex!].cost),
+                                            : PriceConverter.convertPrice(
+    context,
+    shippingController.getChosenShippingByGroupId(sellerGroupList[index].cartGroupId)?.shippingCost ??
+        shippingController.shippingList![index].shippingMethodList![shippingController.shippingList![index].shippingIndex!].cost,
+  ),
                                               style: textBold.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color),
                                               maxLines: 1, overflow: TextOverflow.ellipsis,textAlign: TextAlign.end),
                                           ],
