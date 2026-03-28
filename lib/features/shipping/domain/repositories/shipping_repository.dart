@@ -84,7 +84,18 @@ class ShippingRepository implements ShippingRepositoryInterface{
   @override
 Future<ApiResponseModel> getNoestWilayas(int? sellerId, String? type) async {
   try {
-    final response = await dioClient!.get('${AppConstants.getNoestWilayas}/$sellerId/$type');
+    final Map<String, dynamic> queryParams = {
+      'seller_id': sellerId,
+      'seller_is': type,
+    };
+
+    queryParams.removeWhere((key, value) => value == null || value.toString().isEmpty);
+
+    final response = await dioClient!.get(
+      AppConstants.getNoestWilayas,
+      queryParameters: queryParams,
+    );
+
     return ApiResponseModel.withSuccess(response);
   } catch (e) {
     return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));
@@ -94,7 +105,19 @@ Future<ApiResponseModel> getNoestWilayas(int? sellerId, String? type) async {
 @override
 Future<ApiResponseModel> getNoestStations(int? sellerId, String? type, int? wilayaId) async {
   try {
-    final response = await dioClient!.get('${AppConstants.getNoestStations}/$sellerId/$type/$wilayaId');
+    final Map<String, dynamic> queryParams = {
+      'seller_id': sellerId,
+      'seller_is': type,
+      'wilaya_id': wilayaId,
+    };
+
+    queryParams.removeWhere((key, value) => value == null || value.toString().isEmpty);
+
+    final response = await dioClient!.get(
+      AppConstants.getNoestStations,
+      queryParameters: queryParams,
+    );
+
     return ApiResponseModel.withSuccess(response);
   } catch (e) {
     return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));

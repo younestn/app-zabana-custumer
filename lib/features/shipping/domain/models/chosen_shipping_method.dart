@@ -1,3 +1,4 @@
+import 'dart:convert';
 class ChosenShippingMethodModel {
   int? _id;
   String? _cartGroupId;
@@ -45,8 +46,27 @@ class ChosenShippingMethodModel {
     _createdAt = json['created_at']?.toString();
     _updatedAt = json['updated_at']?.toString();
     _isCheckItemExist = json['is_check_item_exist'];
-    _extraData = json['extra_data'] is Map<String, dynamic>
-        ? json['extra_data']
-        : null;
+  final dynamic rawExtraData = json['extra_data'];
+
+if (rawExtraData is Map<String, dynamic>) {
+  _extraData = rawExtraData;
+} else if (rawExtraData is Map) {
+  _extraData = Map<String, dynamic>.from(rawExtraData);
+} else if (rawExtraData is String && rawExtraData.isNotEmpty) {
+  try {
+    final dynamic decoded = jsonDecode(rawExtraData);
+    if (decoded is Map<String, dynamic>) {
+      _extraData = decoded;
+    } else if (decoded is Map) {
+      _extraData = Map<String, dynamic>.from(decoded);
+    } else {
+      _extraData = null;
+    }
+  } catch (_) {
+    _extraData = null;
+  }
+} else {
+  _extraData = null;
+}
   }
 }

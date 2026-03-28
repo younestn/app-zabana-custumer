@@ -102,9 +102,25 @@ Widget build(BuildContext context) {
   _order = widget.totalOrderAmount + widget.discount;
 
   final shippingController = Provider.of<ShippingController>(context, listen: true);
-  final double shippingAmount = shippingController.getTotalChosenShippingCost() > 0
-      ? shippingController.getTotalChosenShippingCost()
-      : widget.shippingFee;
+
+final Set<String> checkedPhysicalGroupIds = widget.cartList
+    .where((item) => item.isChecked == true && item.productType == 'physical')
+    .map((item) => item.cartGroupId)
+    .whereType<String>()
+    .toSet();
+
+double chosenShippingAmount = 0;
+
+for (final String groupId in checkedPhysicalGroupIds) {
+  final chosenShipping = shippingController.getChosenShippingByGroupId(groupId);
+  if (chosenShipping != null && chosenShipping.isCheckItemExist == 1) {
+    chosenShippingAmount += chosenShipping.shippingCost ?? 0;
+  }
+}
+
+final double shippingAmount = chosenShippingAmount > 0
+    ? chosenShippingAmount
+    : widget.shippingFee;
 
   return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -158,9 +174,10 @@ Widget build(BuildContext context) {
 
         if(widget.hasPhysical) {
           final Set<String> cartGroupIds = widget.cartList
-              .map((e) => e.cartGroupId)
-              .whereType<String>()
-              .toSet();
+    .where((e) => e.isChecked == true && e.productType == 'physical')
+    .map((e) => e.cartGroupId)
+    .whereType<String>()
+    .toSet();
 
           for(final String groupId in cartGroupIds) {
             final bool hasChosen = shippingController.chosenShippingList.any((item) => item.cartGroupId == groupId);

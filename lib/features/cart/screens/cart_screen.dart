@@ -167,17 +167,34 @@ class CartScreenState extends State<CartScreen> {
                   }
                 }
               }
-              for(int i=0; i<shippingController.chosenShippingList.length; i++){
-                if(shippingController.chosenShippingList[i].isCheckItemExist == 1 && !onlyDigital) {
-                  shippingAmount += shippingController.chosenShippingList[i].shippingCost!;
-                }
-              }
+                        for (int index = 0; index < sellerGroupList.length; index++) {
+  bool hasCheckedPhysicalInGroup = false;
+  double fallbackGroupShipping = 0;
 
-              for(int j = 0; j< cartList.length; j++){
-                if(cartList[j].isChecked!) {
-                  shippingAmount += cart.cartList[j].shippingCost ?? 0;
-                }
-              }
+  for (final CartModel groupCart in cartProductList[index]) {
+    if (groupCart.isChecked == true && groupCart.productType == 'physical') {
+      hasCheckedPhysicalInGroup = true;
+    }
+
+    if (groupCart.isChecked == true) {
+      fallbackGroupShipping += groupCart.shippingCost ?? 0;
+    }
+  }
+
+  if (!hasCheckedPhysicalInGroup) {
+    continue;
+  }
+
+  final chosenShipping = shippingController.getChosenShippingByGroupId(
+    sellerGroupList[index].cartGroupId,
+  );
+
+  if (chosenShipping != null && chosenShipping.isCheckItemExist == 1) {
+    shippingAmount += chosenShipping.shippingCost ?? 0;
+  } else {
+    shippingAmount += fallbackGroupShipping;
+  }
+}
 
               final requiredMinOrderQtyCart = _getRequiredMinOrderQtyCartModel(sellerGroupList, cartProductList);
 
@@ -207,7 +224,7 @@ class CartScreenState extends State<CartScreen> {
                                     fontSize: Dimensions.fontSizeLarge,
                                     color: Provider.of<ThemeController>(context, listen: false).darkTheme? Theme.of(context).hintColor : Theme.of(context).primaryColor)),
                                 Text('${getTranslated('inc_vat_tax', context)}', style: titilliumSemiBold.copyWith(
-                                    fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor)),
+                                      fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor)),
                             ]),
 
                             Text(PriceConverter.convertPrice(context, amount+tax+shippingAmount-freeDeliveryAmountDiscount), style: titilliumSemiBold.copyWith(
@@ -563,8 +580,11 @@ class CartScreenState extends State<CartScreen> {
                                               shippingController.shippingList![index].shippingMethodList == null ||
                                               shippingController.chosenShippingList.isEmpty ||
                                               shippingController.shippingList![index].shippingIndex == -1) ? ''
-                                              : PriceConverter.convertPrice(context,
-                                              shippingController.shippingList![index].shippingMethodList![shippingController.shippingList![index].shippingIndex!].cost),
+                                              : PriceConverter.convertPrice(
+    context,
+    shippingController.getChosenShippingByGroupId(sellerGroupList[index].cartGroupId)?.shippingCost ??
+        shippingController.shippingList![index].shippingMethodList![shippingController.shippingList![index].shippingIndex!].cost,
+  ),
                                               style: textBold.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color),
                                               maxLines: 1, overflow: TextOverflow.ellipsis,textAlign: TextAlign.end),
                                           ],

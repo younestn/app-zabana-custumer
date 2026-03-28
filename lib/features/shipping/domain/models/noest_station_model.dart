@@ -16,11 +16,24 @@ class NoestStationModel {
   });
 
   NoestStationModel.fromJson(Map<String, dynamic> json) {
-    code = json['code']?.toString();
-    name = json['name']?.toString();
-    address = json['address']?.toString();
-    email = json['email']?.toString();
-    phones = json['phones'] != null ? List<String>.from(json['phones']) : [];
-    wilayaId = json['wilaya_id'];
+  code = (json['code'] ?? json['key'] ?? json['station_code'])?.toString();
+  name = (json['name'] ?? json['label'] ?? json['station_name'])?.toString();
+  address = json['address']?.toString();
+  email = json['email']?.toString();
+
+  if (json['phones'] is List) {
+    phones = List<String>.from(json['phones']);
+  } else {
+    phones = [];
   }
+
+  wilayaId = _toInt(json['wilaya_id'] ?? json['wilaya'] ?? json['id_wilaya']);
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
 }

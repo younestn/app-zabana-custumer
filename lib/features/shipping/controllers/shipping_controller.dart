@@ -185,6 +185,7 @@ Future addShippingMethod({
       'wilaya_name': _selectedWilayaNameMap[groupId],
       'station_code': _selectedStationCodeMap[groupId],
       'station_name': _selectedStationNameMap[groupId],
+      'baladiya_name': _selectedBaladiyaNameMap[groupId],
       'estimated_days': _estimatedDaysMap[groupId] ?? method.estimatedDays,
       'shipping_cost': _pendingShippingCostMap[groupId] ?? method.cost ?? 0,
       'is_noest': 1,
@@ -314,17 +315,126 @@ final Map<String, String?> _selectedWilayaNameMap = {};
 final Map<String, String?> _selectedDeliveryTypeMap = {};
 final Map<String, String?> _selectedStationCodeMap = {};
 final Map<String, String?> _selectedStationNameMap = {};
+final Map<String, String?> _selectedBaladiyaNameMap = {};
 final Map<String, double> _pendingShippingCostMap = {};
 final Map<String, String?> _estimatedDaysMap = {};
 
 Map<String, List<NoestWilayaModel>> get noestWilayaMap => _noestWilayaMap;
 Map<String, List<NoestStationModel>> get noestStationMap => _noestStationMap;
 Map<String, double> get pendingShippingCostMap => _pendingShippingCostMap;
+List<NoestWilayaModel> getNoestWilayasByGroupId(String groupId) {
+  return _noestWilayaMap[groupId] ?? [];
+}
 
+List<NoestStationModel> getNoestStationsByGroupId(String groupId) {
+  return _noestStationMap[groupId] ?? [];
+}
 
+int? getSelectedWilayaId(String groupId) {
+  return _selectedWilayaIdMap[groupId];
+}
+
+String? getSelectedWilayaName(String groupId) {
+  return _selectedWilayaNameMap[groupId];
+}
+
+String getSelectedDeliveryType(String groupId, {String fallback = 'home_delivery'}) {
+  return _selectedDeliveryTypeMap[groupId] ?? fallback;
+}
+
+String? getSelectedStationCode(String groupId) {
+  return _selectedStationCodeMap[groupId];
+}
+
+String? getSelectedStationName(String groupId) {
+  return _selectedStationNameMap[groupId];
+}
+
+String? getSelectedBaladiyaName(String groupId) {
+  return _selectedBaladiyaNameMap[groupId];
+}
+
+String? getEstimatedDays(String groupId) {
+  return _estimatedDaysMap[groupId];
+}
+
+double getPendingShippingCost(String groupId, {double fallback = 0}) {
+  return _pendingShippingCostMap[groupId] ?? fallback;
+}
+
+void resetNoestSelection(String groupId) {
+  _selectedWilayaIdMap.remove(groupId);
+  _selectedWilayaNameMap.remove(groupId);
+  _selectedDeliveryTypeMap.remove(groupId);
+  _selectedStationCodeMap.remove(groupId);
+  _selectedStationNameMap.remove(groupId);
+  _selectedBaladiyaNameMap.remove(groupId);
+  _pendingShippingCostMap.remove(groupId);
+  _estimatedDaysMap.remove(groupId);
+  _noestStationMap.remove(groupId);
+  notifyListeners();
+}
+
+void hydrateNoestSelectionFromChosen({
+  required String groupId,
+  required ShippingMethodModel method,
+  ChosenShippingMethodModel? chosenShipping,
+}) {
+  final Map<String, dynamic> extra = chosenShipping?.extraData ?? {};
+
+  if ((extra['is_noest'] == 1 || extra['is_noest'] == '1') || (method.isNoest ?? 0) == 1) {
+    _selectedDeliveryTypeMap[groupId] =
+        extra['selected_delivery_method']?.toString() ??
+        extra['delivery_type']?.toString() ??
+        method.deliveryType ??
+        'home_delivery';
+
+    _selectedWilayaIdMap[groupId] = _toInt(extra['wilaya_id']);
+    _selectedWilayaNameMap[groupId] = extra['wilaya_name']?.toString();
+    _selectedStationCodeMap[groupId] = extra['station_code']?.toString();
+    _selectedStationNameMap[groupId] = extra['station_name']?.toString();
+    _selectedBaladiyaNameMap[groupId] =
+        extra['baladiya_name']?.toString() ??
+        extra['commune']?.toString();
+
+    _estimatedDaysMap[groupId] =
+        extra['estimated_days']?.toString() ??
+        method.estimatedDays ??
+        method.duration;
+
+    _pendingShippingCostMap[groupId] =
+        chosenShipping?.shippingCost ??
+        method.cost ??
+        0;
+  } else {
+    _selectedDeliveryTypeMap[groupId] = method.deliveryType ?? 'home_delivery';
+    _estimatedDaysMap[groupId] = method.estimatedDays ?? method.duration;
+    _pendingShippingCostMap[groupId] = chosenShipping?.shippingCost ?? method.cost ?? 0;
+  }
+
+  notifyListeners();
+}
+
+int? _toInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
 
 void setSelectedDeliveryType(String groupId, String value) {
   _selectedDeliveryTypeMap[groupId] = value;
+  _pendingShippingCostMap[groupId] = 0;
+  _estimatedDaysMap[groupId] = null;
+
+  if (value == 'home_delivery') {
+    _selectedStationCodeMap[groupId] = null;
+    _selectedStationNameMap[groupId] = null;
+    _noestStationMap[groupId] = [];
+  } else if (value == 'desk_delivery') {
+    _selectedBaladiyaNameMap[groupId] = null;
+  }
+
   notifyListeners();
 }
 
@@ -333,13 +443,20 @@ void setSelectedWilaya(String groupId, int? wilayaId, String? wilayaName) {
   _selectedWilayaNameMap[groupId] = wilayaName;
   _selectedStationCodeMap[groupId] = null;
   _selectedStationNameMap[groupId] = null;
+  _selectedBaladiyaNameMap[groupId] = null;
   _pendingShippingCostMap[groupId] = 0;
+  _estimatedDaysMap[groupId] = null;
+  _noestStationMap[groupId] = [];
   notifyListeners();
 }
 
 void setSelectedStation(String groupId, String? stationCode, String? stationName) {
   _selectedStationCodeMap[groupId] = stationCode;
   _selectedStationNameMap[groupId] = stationName;
+  notifyListeners();
+}
+void setSelectedBaladiyaName(String groupId, String? value) {
+  _selectedBaladiyaNameMap[groupId] = value?.trim();
   notifyListeners();
 }
 
@@ -350,11 +467,41 @@ Future<void> loadNoestWilayas({
   required String groupId,
 }) async {
   final apiResponse = await shippingServiceInterface.getNoestWilayas(sellerId, sellerType);
+
   if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
     _noestWilayaMap[groupId] = [];
-    apiResponse.response!.data.forEach((item) {
-      _noestWilayaMap[groupId]!.add(NoestWilayaModel.fromJson(item));
-    });
+
+    final dynamic rawData = apiResponse.response!.data;
+    List<dynamic> wilayaList = [];
+
+    if (rawData is List) {
+      wilayaList = rawData;
+    } else if (rawData is Map<String, dynamic>) {
+      if (rawData['wilayas'] is List) {
+        wilayaList = rawData['wilayas'];
+      } else if (rawData['data'] is List) {
+        wilayaList = rawData['data'];
+      } else if (rawData['content'] is List) {
+        wilayaList = rawData['content'];
+      } else if (rawData['results'] is List) {
+        wilayaList = rawData['results'];
+      }
+    }
+
+    for (final item in wilayaList) {
+      if (item is Map<String, dynamic>) {
+        final wilaya = NoestWilayaModel.fromJson(item);
+        if (wilaya.id != null) {
+          _noestWilayaMap[groupId]!.add(wilaya);
+        }
+      } else if (item is Map) {
+        final wilaya = NoestWilayaModel.fromJson(Map<String, dynamic>.from(item));
+        if (wilaya.id != null) {
+          _noestWilayaMap[groupId]!.add(wilaya);
+        }
+      }
+    }
+
     notifyListeners();
   } else {
     ApiChecker.checkApi(apiResponse);
@@ -368,12 +515,42 @@ Future<void> loadNoestStations({
   required int wilayaId,
   required String groupId,
 }) async {
-  final apiResponse = await shippingServiceInterface.getNoestStations(sellerId, sellerType, wilayaId);
+  final apiResponse = await shippingServiceInterface.getNoestStations(
+    sellerId,
+    sellerType,
+    wilayaId,
+  );
+
   if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
     _noestStationMap[groupId] = [];
-    apiResponse.response!.data.forEach((item) {
-      _noestStationMap[groupId]!.add(NoestStationModel.fromJson(item));
-    });
+
+    final dynamic rawData = apiResponse.response!.data;
+    List<dynamic> stationList = [];
+
+    if (rawData is List) {
+      stationList = rawData;
+    } else if (rawData is Map<String, dynamic>) {
+      if (rawData['desks'] is List) {
+        stationList = rawData['desks'];
+      } else if (rawData['stations'] is List) {
+        stationList = rawData['stations'];
+      } else if (rawData['data'] is List) {
+        stationList = rawData['data'];
+      } else if (rawData['content'] is List) {
+        stationList = rawData['content'];
+      }
+    }
+
+    for (final item in stationList) {
+      if (item is Map<String, dynamic>) {
+        _noestStationMap[groupId]!.add(NoestStationModel.fromJson(item));
+      } else if (item is Map) {
+        _noestStationMap[groupId]!.add(
+          NoestStationModel.fromJson(Map<String, dynamic>.from(item)),
+        );
+      }
+    }
+
     notifyListeners();
   } else {
     ApiChecker.checkApi(apiResponse);
@@ -405,6 +582,36 @@ Future<void> calculateNoestPrice({
   } else {
     ApiChecker.checkApi(apiResponse);
   }
+}
+
+List<Map<String, dynamic>> getPlaceOrderShippingPayload() {
+  final Set<String> groupIds = {
+    ..._selectedDeliveryTypeMap.keys,
+    ..._selectedWilayaIdMap.keys,
+    ..._selectedStationCodeMap.keys,
+    ..._selectedBaladiyaNameMap.keys,
+  };
+
+  final List<Map<String, dynamic>> data = [];
+
+  for (final String groupId in groupIds) {
+    data.add({
+      'cart_group_id': groupId,
+      'selected_delivery_method': _selectedDeliveryTypeMap[groupId],
+      'delivery_type': _selectedDeliveryTypeMap[groupId],
+      'wilaya_id': _selectedWilayaIdMap[groupId],
+      'wilaya_name': _selectedWilayaNameMap[groupId],
+      'baladiya_name': _selectedBaladiyaNameMap[groupId],
+      'commune': _selectedBaladiyaNameMap[groupId],
+      'station_code': _selectedStationCodeMap[groupId],
+      'station_name': _selectedStationNameMap[groupId],
+      'estimated_days': _estimatedDaysMap[groupId],
+      'shipping_cost': _pendingShippingCostMap[groupId],
+      'is_noest': 1,
+    });
+  }
+
+  return data;
 }
 
 }

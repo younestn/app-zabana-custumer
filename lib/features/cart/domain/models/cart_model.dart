@@ -207,23 +207,27 @@ class FreeDeliveryOrderAmount {
         });
 
   FreeDeliveryOrderAmount.fromJson(Map<String, dynamic> json) {
-    status = int.parse(json['status'].toString());
-    if(json['amount'] != null){
-      amount = json['amount'].toDouble();
-    }
+  status = _toInt(json['status']);
+  amount = _toDouble(json['amount']);
+  percentage = _toInt(json['percentage']);
+  amountNeed = _toDouble(json['amount_need']);
+  shippingCostSaved = _toDouble(json['shipping_cost_saved']);
+}
 
-    if(json['percentage'] != null){
-      percentage = int.parse(json['percentage'].toString());
-    }
+double _toDouble(dynamic value) {
+  if (value == null) return 0;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? 0;
+}
 
-    if(json['shipping_cost_saved'] != null){
-      shippingCostSaved = json['shipping_cost_saved'].toDouble();
-    }
-
-    if(json['amount_need'] != null){
-      amountNeed = json['amount_need'].toDouble();
-    }
-  }
+int _toInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString()) ?? 0;
+}
 }
 
 

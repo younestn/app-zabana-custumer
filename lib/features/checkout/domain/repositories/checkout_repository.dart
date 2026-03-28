@@ -6,6 +6,7 @@ import 'package:flutter_sixvalley_ecommerce/data/datasource/remote/dio/dio_clien
 import 'package:flutter_sixvalley_ecommerce/data/datasource/remote/exception/api_error_handler.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/api_response.dart';
 import 'package:flutter_sixvalley_ecommerce/features/checkout/domain/repositories/checkout_repository_interface.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shipping/controllers/shipping_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/app_constants.dart';
@@ -15,6 +16,32 @@ import 'package:provider/provider.dart';
 class CheckoutRepository implements CheckoutRepositoryInterface{
   final DioClient? dioClient;
   CheckoutRepository({required this.dioClient});
+
+    void _appendOrderShippingPayload(Map<String, dynamic> body) {
+    final shippingController = Provider.of<ShippingController>(Get.context!, listen: false);
+    final List<Map<String, dynamic>> shippingData = shippingController.getPlaceOrderShippingPayload();
+
+    if (shippingData.isNotEmpty) {
+      body['shipping_data'] = jsonEncode(shippingData);
+
+      if (shippingData.length == 1) {
+        final Map<String, dynamic> first = shippingData.first;
+
+        body['cart_group_id'] = first['cart_group_id'];
+        body['selected_delivery_method'] = first['selected_delivery_method'];
+        body['delivery_type'] = first['delivery_type'];
+        body['wilaya_id'] = first['wilaya_id'];
+        body['wilaya_name'] = first['wilaya_name'];
+        body['baladiya_name'] = first['baladiya_name'];
+        body['commune'] = first['commune'];
+        body['station_code'] = first['station_code'];
+        body['station_name'] = first['station_name'];
+        body['estimated_days'] = first['estimated_days'];
+        body['shipping_cost'] = first['shipping_cost'];
+        body['is_noest'] = first['is_noest'];
+      }
+    }
+  }
 
 
   @override
@@ -44,7 +71,7 @@ class CheckoutRepository implements CheckoutRepositoryInterface{
         'bring_change_amount' : cashChangeAmount,
         'current_currency_code': currentCurrencyCode,
       };
-
+      _appendOrderShippingPayload(queryParams);
       debugPrint('----------(order_place)-----$queryParams');
 
       final response = await dioClient!.get(AppConstants.orderPlaceUri, queryParameters: queryParams);
@@ -58,13 +85,14 @@ class CheckoutRepository implements CheckoutRepositoryInterface{
   @override
   Future<ApiResponseModel> offlinePaymentPlaceOrder(String? addressID, String? couponCode, String? couponDiscountAmount, String? billingAddressId, String? orderNote, List <String?> typeKey, List<String> typeValue, int? id, String name, String? paymentNote, bool? isCheckCreateAccount, String? password) async {
     try {
-      Map<String?, String> fields = {};
-      Map<String?, String> info = {};
-      for(var i = 0; i < typeKey.length; i++){
-        info.addAll(<String?, String>{
-          typeKey[i] : typeValue[i]
-        });
-      }
+      Map<String, dynamic> fields = {};
+Map<String, dynamic> info = {};
+
+for (var i = 0; i < typeKey.length; i++) {
+  if (typeKey[i] != null && typeKey[i]!.isNotEmpty) {
+    info[typeKey[i]!] = typeValue[i];
+  }
+}
 
       int isCheckAccount = isCheckCreateAccount! ? 1: 0;
       fields.addAll(<String, String>{
@@ -82,6 +110,7 @@ class CheckoutRepository implements CheckoutRepositoryInterface{
         'is_check_create_account' : isCheckAccount.toString(),
         'password' : password ?? '',
       });
+            _appendOrderShippingPayload(fields);
       Response response = await dioClient!.post(AppConstants.offlinePayment, data: fields);
       return ApiResponseModel.withSuccess(response);
     } catch (e) {
@@ -91,10 +120,34 @@ class CheckoutRepository implements CheckoutRepositoryInterface{
 
 
   @override
-  Future<ApiResponseModel> walletPaymentPlaceOrder(String? addressID, String? couponCode,String? couponDiscountAmount, String? billingAddressId, String? orderNote, bool? isCheckCreateAccount, String? password) async {
-    int isCheckAccount = isCheckCreateAccount! ? 1: 0;
+    Future<ApiResponseModel> walletPaymentPlaceOrder(
+      String? addressID,
+      String? couponCode,
+      String? couponDiscountAmount,
+      String? billingAddressId,
+      String? orderNote,
+      bool? isCheckCreateAccount,
+      String? password) async {
+    int isCheckAccount = isCheckCreateAccount! ? 1 : 0;
     try {
-      final response = await dioClient!.get('${AppConstants.walletPayment}?address_id=$addressID&coupon_code=$couponCode&coupon_discount=$couponDiscountAmount&billing_address_id=$billingAddressId&order_note=$orderNote&guest_id=${Provider.of<AuthController>(Get.context!, listen: false).getGuestToken()}&is_guest=${Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn()? 0 :1}&is_check_create_account=$isCheckAccount&password=$password',);
+      final Map<String, dynamic> queryParams = {
+        'address_id': addressID,
+        'coupon_code': couponCode,
+        'coupon_discount': couponDiscountAmount,
+        'billing_address_id': billingAddressId,
+        'order_note': orderNote,
+        'guest_id': Provider.of<AuthController>(Get.context!, listen: false).getGuestToken(),
+        'is_guest': Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn() ? 0 : 1,
+        'is_check_create_account': isCheckAccount,
+        'password': password,
+      };
+
+      _appendOrderShippingPayload(queryParams);
+
+      final response = await dioClient!.get(
+        AppConstants.walletPayment,
+        queryParameters: queryParams,
+      );
       return ApiResponseModel.withSuccess(response);
     } catch (e) {
       return ApiResponseModel.withError(ApiErrorHandler.getMessage(e));
@@ -127,22 +180,29 @@ class CheckoutRepository implements CheckoutRepositoryInterface{
 
     try {
       int isCheckAccount = isCheckCreateAccount! ? 1: 0;
-      final response = await dioClient!.post(AppConstants.digitalPayment, data: {
+            final Map<String, dynamic> body = {
         "order_note": orderNote,
-        "customer_id":  customerId,
+        "customer_id": customerId,
         "address_id": addressId,
         "billing_address_id": billingAddressId,
         "coupon_code": couponCode,
         "coupon_discount": couponDiscount,
-        "payment_platform" : "app",
-        "payment_method" : paymentMethod,
-        "callback" : null,
-        "payment_request_from" : "app",
-        'guest_id' : Provider.of<AuthController>(Get.context!, listen: false).getGuestToken(),
+        "payment_platform": "app",
+        "payment_method": paymentMethod,
+        "callback": null,
+        "payment_request_from": "app",
+        'guest_id': Provider.of<AuthController>(Get.context!, listen: false).getGuestToken(),
         'is_guest': !Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn(),
-        'is_check_create_account' : isCheckAccount.toString(),
-        'password' : password,
-      });
+        'is_check_create_account': isCheckAccount.toString(),
+        'password': password,
+      };
+
+      _appendOrderShippingPayload(body);
+
+      final response = await dioClient!.post(
+        AppConstants.digitalPayment,
+        data: body,
+      );
       return ApiResponseModel.withSuccess(response);
     } catch (e) {
       final error = e as DioException;
